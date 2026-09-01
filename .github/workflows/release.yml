@@ -50,6 +50,7 @@ jobs:
           run_install: false
 
       - name: Get pnpm store directory
+        id: pnpm
         shell: bash
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
 
