@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Button, Card, List, Typography, Space, Tag, Modal, Input, message, Empty, Checkbox, Popconfirm, Dropdown } from 'antd';
-import { PlusOutlined, DeleteOutlined, CheckCircleOutlined, InboxOutlined, DownOutlined, FolderOpenOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, CheckCircleOutlined, InboxOutlined, DownOutlined, FolderOpenOutlined, SyncOutlined } from '@ant-design/icons';
 import { useProjectStore } from '../stores/projectStore';
 import { useItemStore } from '../stores/itemStore';
+import { useAutoUpdate } from '../hooks/useAutoUpdate';
 import { useNavigate } from 'react-router-dom';
 import { open } from '@tauri-apps/plugin-dialog';
 import dayjs from 'dayjs';
@@ -24,6 +25,7 @@ export default function Dashboard() {
   const [newTags, setNewTags] = useState('');
   const [showArchived, setShowArchived] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
+  const { checkForUpdate } = useAutoUpdate();
 
   useEffect(() => {
     if (currentProjectPath) {
@@ -120,6 +122,12 @@ export default function Dashboard() {
           </Space>
         </Dropdown>
         <Space>
+          <Button
+            icon={<SyncOutlined />}
+            onClick={() => checkForUpdate()}
+          >
+            检查更新
+          </Button>
           <Checkbox
             checked={showArchived}
             onChange={(e) => setShowArchived(e.target.checked)}

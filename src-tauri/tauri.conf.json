@@ -25,9 +25,18 @@
       "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: asset: https:; connect-src ipc: http://ipc.localhost; font-src 'self' data:"
     }
   },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEFCNDQ1NjhFRTgwMkQ5N0YKUldSLzJRTG9qbFpFcXlhc0U5TEZUbXpHZGRlc3pDR0owblZCS05ra3dqSE9uUGIwRzg1SURVOWMK",
+      "endpoints": [
+        "https://github.com/xiaolaji404/Palimpsest/releases/latest/download/latest.json"
+      ]
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
