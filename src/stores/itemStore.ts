@@ -11,6 +11,7 @@ interface ItemState {
 
   loadItems: (projectPath: string, showArchived?: boolean) => Promise<void>;
   createItem: (projectPath: string, title: string, tags?: string[]) => Promise<ItemMeta>;
+  updateItemMeta: (projectPath: string, itemId: string, meta: { title?: string; tags?: string[] }) => Promise<void>;
   openItem: (projectPath: string, itemId: string) => Promise<void>;
   saveContent: (projectPath: string, itemId: string, content: string) => Promise<void>;
   completeItem: (projectPath: string, itemId: string) => Promise<void>;
@@ -50,6 +51,20 @@ export const useItemStore = create<ItemState>((set) => ({
     });
     set((state) => ({ items: [meta, ...state.items] }));
     return meta;
+  },
+
+  updateItemMeta: async (projectPath, itemId, meta) => {
+    await invoke('update_item_meta', {
+      projectPath,
+      itemId,
+      title: meta.title ?? null,
+      tags: meta.tags ?? null,
+    });
+    set((state) => ({
+      items: state.items.map((i) =>
+        i.id === itemId ? { ...i, ...meta } : i
+      ),
+    }));
   },
 
   openItem: async (projectPath, itemId) => {

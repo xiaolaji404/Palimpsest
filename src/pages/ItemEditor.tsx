@@ -1,12 +1,12 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { Button, Typography, Space, Spin, message } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
-import { useParams, useNavigate } from 'react-router-dom';
+import { Button, Typography, Spin, message } from 'antd';
+import { ArrowLeftOutlined } from '@ant-design/icons';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useProjectStore } from '../stores/projectStore';
 import { useItemStore } from '../stores/itemStore';
 import MarkdownEditor from '../components/MarkdownEditor';
 
-const { Text } = Typography;
+const { Text, Title } = Typography;
 
 interface PendingSave {
   path: string;
@@ -17,8 +17,9 @@ interface PendingSave {
 export default function ItemEditor() {
   const { itemId } = useParams<{ itemId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentProjectPath } = useProjectStore();
-  const { currentItemId, currentContent, openItem, saveContent, setCurrentContent } = useItemStore();
+  const { items, currentItemId, currentContent, openItem, saveContent, setCurrentContent } = useItemStore();
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [messageApi, contextHolder] = message.useMessage();
@@ -26,6 +27,11 @@ export default function ItemEditor() {
   const [lastSaved, setLastSaved] = useState<string>('');
   const pendingSaveRef = useRef<PendingSave | null>(null);
   const saveInProgressRef = useRef(false);
+
+  // Prefer title carried from the list; fall back to the item store list.
+  const titleFromState = (location.state as { title?: string } | null)?.title;
+  const title = titleFromState || items.find((i) => i.id === itemId)?.title || '事项';
+
 
   // Always-latest content so effect cleanup can flush the outgoing item
   const contentRef = useRef(currentContent);
@@ -122,29 +128,34 @@ export default function ItemEditor() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       {contextHolder}
       <div style={{
-        padding: '12px 24px',
+        padding: '10px 16px',
         borderBottom: '1px solid #f0f0f0',
         display: 'flex',
-        justifyContent: 'space-between',
         alignItems: 'center',
+        gap: 12,
         background: '#fff',
       }}>
-        <Space>
-          <Button
-            icon={<ArrowLeftOutlined />}
-            onClick={() => navigate('/')}
-          />
-          <Text type="secondary">
-            {saving ? '保存中...' : lastSaved ? `已保存 ${lastSaved}` : ''}
-          </Text>
-        </Space>
         <Button
-          icon={<SaveOutlined />}
-          onClick={handleManualSave}
-          loading={saving}
+          icon={<ArrowLeftOutlined />}
+          onClick={() => navigate('/')}
+        />
+        <Title
+          level={5}
+          style={{
+            margin: 0,
+            flex: 1,
+            minWidth: 0,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+          title={title}
         >
-          保存
-        </Button>
+          {title}
+        </Title>
+        <Text type="secondary" style={{ fontSize: 12, flexShrink: 0 }}>
+          {saving ? '保存中...' : lastSaved ? `已保存 ${lastSaved}` : '自动保存已开启'}
+        </Text>
       </div>
       <div style={{ flex: 1, overflow: 'hidden' }}>
         {ready ? (

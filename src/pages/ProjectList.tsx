@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Card, List, Typography, Space, Tag, Modal, Input, message } from 'antd';
-import { FolderOpenOutlined, PlusOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { FolderOpenOutlined, PlusOutlined, ClockCircleOutlined, CloseOutlined } from '@ant-design/icons';
 import { useProjectStore } from '../stores/projectStore';
 import { open } from '@tauri-apps/plugin-dialog';
 import dayjs from 'dayjs';
@@ -13,12 +13,22 @@ dayjs.locale('zh-cn');
 const { Title, Text } = Typography;
 
 export default function ProjectList() {
-  const { recentProjects, createProject, openProject } = useProjectStore();
+  const { recentProjects, createProject, openProject, removeRecentProject } = useProjectStore();
   const [modalVisible, setModalVisible] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [selectedPath, setSelectedPath] = useState('');
   const [creating, setCreating] = useState(false);
+  const [hoveredPath, setHoveredPath] = useState<string | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
+
+  const handleRemoveRecent = async (path: string) => {
+    try {
+      await removeRecentProject(path);
+      messageApi.success('已从最近打开移除');
+    } catch (e: any) {
+      messageApi.error(e || '移除失败');
+    }
+  };
 
   const handleSelectPath = async () => {
     const path = await open({ directory: true, title: '选择项目路径' });
@@ -124,7 +134,28 @@ export default function ProjectList() {
                 <List.Item
                   style={{ cursor: 'pointer', padding: '12px 16px', borderRadius: 8 }}
                   onClick={() => handleOpenRecent(item.path)}
+                  onMouseEnter={() => setHoveredPath(item.path)}
+                  onMouseLeave={() => setHoveredPath(null)}
                   className="recent-project-item"
+                  actions={[
+                    <Button
+                      key="remove"
+                      type="text"
+                      size="small"
+                      icon={<CloseOutlined style={{ fontSize: 11 }} />}
+                      title="从最近打开移除"
+                      style={{
+                        color: '#999',
+                        opacity: hoveredPath === item.path ? 1 : 0,
+                        transition: 'opacity 0.15s',
+                        padding: '0 4px',
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveRecent(item.path);
+                      }}
+                    />,
+                  ]}
                 >
                   <List.Item.Meta
                     title={item.name}

@@ -13,6 +13,7 @@ interface ProjectState {
   createProject: (name: string, path: string, description?: string) => Promise<Project>;
   openProject: (path: string) => Promise<Project>;
   switchProject: (path: string) => Promise<void>;
+  removeRecentProject: (path: string) => Promise<void>;
 }
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
@@ -82,5 +83,14 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
   switchProject: async (path) => {
     await get().openProject(path);
+  },
+
+  removeRecentProject: async (path) => {
+    const config = get().config;
+    if (!config) return;
+    const recentProjects = (config.recentProjects || []).filter((r) => r.path !== path);
+    const newConfig = { ...config, recentProjects };
+    await invoke('save_config', { config: newConfig });
+    set({ config: newConfig, recentProjects });
   },
 }));

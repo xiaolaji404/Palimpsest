@@ -12,6 +12,7 @@ import { clipboard } from '@milkdown/kit/plugin/clipboard';
 import { block } from '@milkdown/kit/plugin/block';
 import { nord } from '@milkdown/theme-nord';
 import { TextSelection } from '@milkdown/kit/prose/state';
+import { CodeOutlined, EyeOutlined } from '@ant-design/icons';
 
 interface MarkdownEditorProps {
   value: string;
@@ -125,72 +126,19 @@ export default function MarkdownEditor({ value, onChange }: MarkdownEditorProps)
     onChangeRef.current?.(newValue);
   }, []);
 
-  const switchToSource = useCallback(() => {
-    setMode('source');
-  }, []);
-
-  const switchToWysiwyg = useCallback(() => {
-    // Increment key to force full remount — loads current value as initial content
-    setEditorKey((k) => k + 1);
-    setMode('wysiwyg');
-  }, []);
+  const toggleMode = useCallback(() => {
+    if (mode === 'source') {
+      // Switch back to visual editor, remount to load current value
+      setEditorKey((k) => k + 1);
+      setMode('wysiwyg');
+    } else {
+      setMode('source');
+    }
+  }, [mode]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'flex-end',
-        padding: '6px 16px',
-        gap: 6,
-        borderBottom: '1px solid #f0f0f0',
-        background: '#fafafa',
-      }}>
-        <button
-          onClick={switchToWysiwyg}
-          style={{
-            padding: '5px 14px',
-            borderRadius: 6,
-            border: 'none',
-            background: mode === 'wysiwyg' ? '#1677ff' : 'transparent',
-            color: mode === 'wysiwyg' ? '#fff' : '#666',
-            cursor: 'pointer',
-            fontSize: 13,
-            fontWeight: 500,
-            transition: 'all 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            if (mode !== 'wysiwyg') e.currentTarget.style.background = '#f0f0f0';
-          }}
-          onMouseLeave={(e) => {
-            if (mode !== 'wysiwyg') e.currentTarget.style.background = 'transparent';
-          }}
-        >
-          WYSIWYG
-        </button>
-        <button
-          onClick={switchToSource}
-          style={{
-            padding: '5px 14px',
-            borderRadius: 6,
-            border: 'none',
-            background: mode === 'source' ? '#1677ff' : 'transparent',
-            color: mode === 'source' ? '#fff' : '#666',
-            cursor: 'pointer',
-            fontSize: 13,
-            fontWeight: 500,
-            transition: 'all 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            if (mode !== 'source') e.currentTarget.style.background = '#f0f0f0';
-          }}
-          onMouseLeave={(e) => {
-            if (mode !== 'source') e.currentTarget.style.background = 'transparent';
-          }}
-        >
-          源码
-        </button>
-      </div>
-      <div style={{ flex: 1, overflow: 'hidden' }}>
+    <div style={{ position: 'relative', height: '100%' }}>
+      <div style={{ height: '100%' }}>
         {mode === 'wysiwyg' ? (
           <MilkdownProvider key={editorKey}>
             <EditorContent content={value} onContentChange={onChange} />
@@ -216,6 +164,42 @@ export default function MarkdownEditor({ value, onChange }: MarkdownEditorProps)
           />
         )}
       </div>
+      <button
+        onClick={toggleMode}
+        style={{
+          position: 'absolute',
+          left: 10,
+          bottom: 10,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
+          padding: '2px 8px',
+          borderRadius: 4,
+          border: 'none',
+          background: 'rgba(0, 0, 0, 0.04)',
+          color: '#999',
+          cursor: 'pointer',
+          fontSize: 12,
+          lineHeight: '20px',
+          opacity: 0.7,
+          transition: 'all 0.2s',
+          zIndex: 10,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.opacity = '1';
+          e.currentTarget.style.color = '#1677ff';
+          e.currentTarget.style.background = 'rgba(22, 119, 255, 0.1)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.opacity = '0.7';
+          e.currentTarget.style.color = '#999';
+          e.currentTarget.style.background = 'rgba(0, 0, 0, 0.04)';
+        }}
+        title={mode === 'source' ? '切换回可视化编辑' : '查看 Markdown 源码'}
+      >
+        {mode === 'source' ? <EyeOutlined /> : <CodeOutlined />}
+        {mode === 'source' ? '可视化' : '源码'}
+      </button>
     </div>
   );
 }
