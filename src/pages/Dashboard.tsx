@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Button, Card, List, Typography, Space, Tag, Modal, Input, message, Empty, Checkbox, Dropdown } from 'antd';
+import type { InputProps } from 'antd';
 import { PlusOutlined, DeleteOutlined, InboxOutlined, DownOutlined, FolderOpenOutlined, EditOutlined, UndoOutlined, MoreOutlined, CheckOutlined } from '@ant-design/icons';
 import { useProjectStore } from '../stores/projectStore';
 import { useItemStore } from '../stores/itemStore';
@@ -14,6 +15,38 @@ dayjs.extend(relativeTime);
 dayjs.locale('zh-cn');
 
 const { Text, Title } = Typography;
+
+type SubmitInputProps = Omit<InputProps, 'onPressEnter' | 'onKeyDown'> & {
+  onSubmit: () => void;
+  onCancel?: () => void;
+};
+
+// Enter submits only when an IME composition is NOT active. On WebKit the
+// Enter that confirms a pinyin candidate can arrive with isComposing === false,
+// so we also track composition via onCompositionStart/End (that Enter fires
+// before compositionend, so the ref still catches it).
+function SubmitInput({ onSubmit, onCancel, ...rest }: SubmitInputProps) {
+  const composingRef = useRef(false);
+  return (
+    <Input
+      {...rest}
+      onCompositionStart={() => {
+        composingRef.current = true;
+      }}
+      onCompositionEnd={() => {
+        composingRef.current = false;
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          if (composingRef.current || e.nativeEvent.isComposing || e.keyCode === 229) return;
+          onSubmit();
+        } else if (e.key === 'Escape') {
+          onCancel?.();
+        }
+      }}
+    />
+  );
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -228,20 +261,15 @@ export default function Dashboard() {
                   onMouseLeave={() => setHoveredId(null)}
                 >
                   {editingId === item.id ? (
-                    <Input
+                    <SubmitInput
                       size="small"
                       value={editingTitle}
                       autoFocus
                       onChange={(e) => setEditingTitle(e.target.value)}
                       onClick={(e) => e.stopPropagation()}
-                      onPressEnter={handleSaveTitle}
+                      onSubmit={handleSaveTitle}
+                      onCancel={() => setEditingId(null)}
                       onBlur={handleSaveTitle}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Escape') {
-                          e.stopPropagation();
-                          setEditingId(null);
-                        }
-                      }}
                       style={{ maxWidth: 360 }}
                     />
                   ) : (
@@ -328,22 +356,22 @@ export default function Dashboard() {
         <Space direction="vertical" style={{ width: '100%' }} size="middle">
           <div>
             <Text>事项标题</Text>
-            <Input
+            <SubmitInput
               placeholder="输入事项标题"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               style={{ marginTop: 8 }}
-              onPressEnter={handleCreate}
+              onSubmit={handleCreate}
             />
           </div>
           <div>
             <Text>标签（用逗号分隔）</Text>
-            <Input
+            <SubmitInput
               placeholder="bug, urgent"
               value={newTags}
               onChange={(e) => setNewTags(e.target.value)}
               style={{ marginTop: 8 }}
-              onPressEnter={handleCreate}
+              onSubmit={handleCreate}
             />
           </div>
         </Space>
