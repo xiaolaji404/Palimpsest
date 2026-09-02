@@ -7,14 +7,12 @@ import Dashboard from './pages/Dashboard';
 import ItemEditor from './pages/ItemEditor';
 import Archive from './pages/Archive';
 import { useProjectStore } from './stores/projectStore';
-import { useAutoUpdate } from './hooks/useAutoUpdate';
+import { AutoUpdateOverlay } from './components/AutoUpdateOverlay';
 import './styles/global.css';
 
 function AppInner() {
   const { currentProject, loadConfig } = useProjectStore();
   const [initialized, setInitialized] = useState(false);
-
-  useAutoUpdate();
 
   useEffect(() => {
     loadConfig().finally(() => setInitialized(true));
@@ -56,6 +54,7 @@ export default function App() {
     }}>
       <HashRouter>
         <AppInner />
+        <AutoUpdateOverlay />
       </HashRouter>
     </ConfigProvider>
   );
